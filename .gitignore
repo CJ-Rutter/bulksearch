@@ -1,0 +1,50 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (if added later)
+node_modules/
+npm-debug.log*
+package-lock.json
+yarn.lock
+
+# Build output (if added later)
+dist/
+build/
+out/
+
+# Environment & secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Logs & temp
+*.log
+tmp/
+temp/
+
+# Scratch / playground
+scratch.html
+test-*.html
+playground/
+
+# Backup files
+*.bak
+
+# Real inventory data — only sanitized samples are tracked
+data/*.csv
+!data/sample-*.csv
+!data/README.md
+
+# Local Claude Code overrides
+CLAUDE.local.md
+.claude/
