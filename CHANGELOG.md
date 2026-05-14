@@ -14,6 +14,13 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.4.1] — 2026-05-14
+
+### Fixed
+- **Bin Location column cutoff.** Long bin values (e.g. `"Parts Room Leaning on Wall by Batteries"` — 39 chars) were forcing the column to nowrap, which pushed adjacent columns or overflowed the table on screen and clipped at the page edge in print. The chip now wraps to multiple lines inside the cell, the column is capped at 220px on screen / 1.6in on print, and short codes like `AA1B` still render compact on a single line.
+
+---
+
 ## [0.4.0] — 2026-05-14
 
 ### Added
