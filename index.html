@@ -1010,6 +1010,73 @@
     display: none;
   }
 
+  /* Update-available banner — appears bottom-right when a newer version
+     has been published. Theme-aware via CSS variables; hidden on print. */
+  .update-banner {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: var(--bg-panel);
+    border: 1px solid var(--accent);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    max-width: 360px;
+    animation: ub-slide-in 0.25s ease-out;
+  }
+  html[data-theme="light"] .update-banner {
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.15);
+  }
+  .update-banner .ub-text { line-height: 1.45; }
+  .update-banner .ub-new { color: var(--accent); font-weight: 700; }
+  .update-banner .ub-old { color: var(--text-faint); }
+  .update-banner .ub-reload {
+    flex-shrink: 0;
+    background: var(--accent);
+    color: var(--bg-panel);
+    border: none;
+    padding: 7px 12px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.12s;
+  }
+  html[data-theme="light"] .update-banner .ub-reload { color: #fff; }
+  .update-banner .ub-reload:hover { opacity: 0.85; }
+  .update-banner .ub-dismiss {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    width: 22px;
+    height: 22px;
+    line-height: 1;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+  }
+  .update-banner .ub-dismiss:hover {
+    color: var(--text);
+    border-color: var(--border-bright);
+  }
+  @keyframes ub-slide-in {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  @media print { .update-banner { display: none !important; } }
+
   /* =====================
      PRINT STYLES
      Hide all the dark-UI chrome, render a clean table on white with the
@@ -1248,7 +1315,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.5.0</span></h1>
+        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.6.0</span></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1259,7 +1326,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.5.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.6.0"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1338,7 +1405,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.5.0</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.6.0</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
@@ -1951,6 +2018,88 @@ function updatePrintSummary() {
     }).join("");
   }
 }
+
+// ---------- Update check ----------
+// Fetches the live HTML (cache-busted) on visibility change and every
+// 10 minutes, regexes out the version chip, and shows a non-intrusive
+// banner when a newer version is available. Dismissals stick per-version
+// so the same banner doesn't keep nagging.
+const APP_VERSION = (document.getElementById("brand-version")?.textContent || "").replace(/^v/, "");
+const UPDATE_DISMISS_KEY = "bulksearch-dismissed-update";
+let updateBannerEl = null;
+let updateCheckInFlight = false;
+
+function compareVersions(a, b) {
+  // Returns 1 if a > b, -1 if a < b, 0 if equal. Handles "1.2.10" > "1.2.2".
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = pa[i] || 0;
+    const y = pb[i] || 0;
+    if (x > y) return 1;
+    if (x < y) return -1;
+  }
+  return 0;
+}
+
+async function checkForUpdate() {
+  if (updateCheckInFlight || !APP_VERSION) return;
+  // Skip when offline / running from file:// (fetch will reject anyway)
+  if (location.protocol === "file:") return;
+  updateCheckInFlight = true;
+  try {
+    const url = location.pathname + (location.pathname.endsWith("/") ? "" : "") + "?_v=" + Date.now();
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return;
+    const html = await res.text();
+    const match = html.match(/id="brand-version"[^>]*>v(\d+\.\d+\.\d+)/);
+    if (!match) return;
+    const liveVersion = match[1];
+    if (compareVersions(liveVersion, APP_VERSION) > 0) {
+      // Respect a prior dismissal for this exact version
+      let dismissed = null;
+      try { dismissed = localStorage.getItem(UPDATE_DISMISS_KEY); } catch (e) {}
+      if (dismissed === liveVersion) return;
+      showUpdateBanner(liveVersion);
+    }
+  } catch (e) {
+    // Silent — network errors are expected periodically
+  } finally {
+    updateCheckInFlight = false;
+  }
+}
+
+function showUpdateBanner(newVersion) {
+  if (updateBannerEl) return;  // already visible
+  updateBannerEl = document.createElement("div");
+  updateBannerEl.className = "update-banner";
+  updateBannerEl.setAttribute("role", "status");
+  updateBannerEl.innerHTML =
+    '<div class="ub-text">' +
+      '<span class="ub-new">v' + newVersion + '</span> available' +
+      ' <span class="ub-old">(you\'re on v' + APP_VERSION + ')</span>' +
+    '</div>' +
+    '<button class="ub-reload" type="button">Reload</button>' +
+    '<button class="ub-dismiss" type="button" aria-label="Dismiss">×</button>';
+  updateBannerEl.querySelector(".ub-reload").addEventListener("click", () => {
+    location.reload();
+  });
+  updateBannerEl.querySelector(".ub-dismiss").addEventListener("click", () => {
+    try { localStorage.setItem(UPDATE_DISMISS_KEY, newVersion); } catch (e) {}
+    if (updateBannerEl) {
+      updateBannerEl.remove();
+      updateBannerEl = null;
+    }
+  });
+  document.body.appendChild(updateBannerEl);
+}
+
+// Run once a minute after load, then on tab-focus, then every 10 minutes
+setTimeout(checkForUpdate, 60 * 1000);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") checkForUpdate();
+});
+setInterval(checkForUpdate, 10 * 60 * 1000);
 
 // ---------- Wire up UI ----------
 $btnUpload.addEventListener("click", () => $fileInput.click());

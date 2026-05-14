@@ -14,6 +14,20 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.6.0] — 2026-05-14
+
+### Added
+- **Update-available banner.** When a newer version is published, an open tab notices and surfaces a small bottom-right banner: "**v0.6.1** available (you're on v0.6.0)" with a Reload button and an × dismiss. Dismissals stick per-version (localStorage), so the same banner doesn't nag — it'll re-show when the next version ships.
+- Check fires 60s after load, on tab-focus (so coworkers who leave the tab open across days see the prompt the moment they come back), and every 10 minutes as a backstop.
+- `cache: 'no-store'` + cache-buster query on the fetch so the browser's HTML cache can't mask a real update.
+- Robust against offline, `file://` runs, and version-extraction failure: silently no-ops, never breaks the app.
+
+### Notes
+- Pure DOM/fetch — no service worker. Keeps the "open the HTML and it works" property intact for local dev / air-gapped use.
+- Version comparison is numeric per segment (so `0.6.10` > `0.6.2` works correctly).
+
+---
+
 ## [0.5.0] — 2026-05-14
 
 ### Changed
