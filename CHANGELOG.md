@@ -14,6 +14,15 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.4.2] — 2026-05-14
+
+### Fixed
+- **Qty + Cost columns getting clipped in print.** Without an explicit column layout, browsers let Description and Bin balloon to fit content, squeezing the right-side numeric columns down to a few characters or off the page entirely. Print table now uses `table-layout: fixed` with allocated percentages (Part 13% / Description 32% / Make 16% / Bin 19% / Qty 8% / Cost 12%), reserving room for the right edge.
+- Tightened page margin from 0.5in to 0.4in to recover ~0.4in of usable width.
+- Long descriptions, makes, and part numbers now wrap inside the cell (via `word-break: break-word` / `overflow-wrap: anywhere`) instead of forcing the column wider than its allotment.
+
+---
+
 ## [0.4.1] — 2026-05-14
 
 ### Fixed

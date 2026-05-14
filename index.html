@@ -1009,7 +1009,7 @@
      ===================== */
   @media print {
     @page {
-      margin: 0.5in;
+      margin: 0.4in;
       size: letter portrait;
     }
 
@@ -1042,6 +1042,26 @@
       background: transparent;
       border: none;
     }
+
+    /* Fixed table layout with explicit column widths — without this, browsers
+       let Description and Bin balloon to fit content, squeezing Qty and Cost
+       down to a few characters or clipping them off the right edge entirely. */
+    #table-wrap table {
+      table-layout: fixed;
+    }
+    /* Column allocation (sums to 100%, ordered Part / Desc / Make / Bin / Qty / Cost) */
+    #table-wrap th:nth-child(1),
+    #table-wrap td:nth-child(1) { width: 13%; }
+    #table-wrap th:nth-child(2),
+    #table-wrap td:nth-child(2) { width: 32%; }
+    #table-wrap th:nth-child(3),
+    #table-wrap td:nth-child(3) { width: 16%; }
+    #table-wrap th:nth-child(4),
+    #table-wrap td:nth-child(4) { width: 19%; }
+    #table-wrap th:nth-child(5),
+    #table-wrap td:nth-child(5) { width: 8%; }
+    #table-wrap th:nth-child(6),
+    #table-wrap td:nth-child(6) { width: 12%; }
 
     /* Show + style the print summary */
     #print-summary {
@@ -1135,9 +1155,16 @@
       background: #fff !important;
       font-size: 10px;
       vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
+    /* Long descriptions wrap inside the cell instead of forcing the column
+       wider than its allotted percentage. */
+    .col-desc { word-break: break-word; }
 
-    /* Part # — keep prominent in monospace, no badge bg */
+    /* Part # — keep prominent in monospace, no badge bg.
+       Allow long part numbers (e.g. "1259260CARDGT") to wrap to a second
+       line rather than clip the right edge of the column. */
     .part-badge,
     .part-text {
       background: transparent !important;
@@ -1149,7 +1176,8 @@
     .col-part {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
-      white-space: nowrap;
+      overflow-wrap: anywhere;
+      word-break: break-all;
     }
 
     /* Bin chip — flatten to plain text on paper, allow wrap inside the cell
@@ -1211,7 +1239,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.4.1</span></h1>
+        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.4.2</span></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1222,7 +1250,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.4.1"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.4.2"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1301,7 +1329,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.4.1</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.4.2</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
