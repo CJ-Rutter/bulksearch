@@ -14,6 +14,15 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.4.0] — 2026-05-14
+
+### Added
+- **Print button** in the data-actions row, plus a comprehensive `@media print` stylesheet. Click Print (or hit Ctrl/Cmd+P) and the paper version drops the dark-UI chrome, renders a clean black-on-white table with repeating column headers across pages, and leads with a summary block: title + version, dataset name, current row count, print date, and a one-line "filters applied" recap (search term, make, in-stock, bulk mode, sort).
+- Rows are kept together across page breaks; part numbers stay monospace and bold; bin tags flatten to plain bordered chips; numeric columns right-aligned with tabular numerals.
+- `updatePrintSummary()` also runs on `beforeprint`, so browser-initiated prints (keyboard shortcut, browser menu) get the same context block as the button-triggered print.
+
+---
+
 ## [0.3.0] — 2026-05-14
 
 ### Added

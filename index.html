@@ -986,6 +986,204 @@
     .col-mfr, .col-cost { font-size: 10.5px; }
     .theme-switch-label span:not(:first-child) { display: none; }
   }
+
+  /* Print-only summary block — hidden on screen, shown on print so the
+     paper sheet has title, current filter context, and date at the top. */
+  #print-summary {
+    display: none;
+  }
+
+  /* =====================
+     PRINT STYLES
+     Hide all the dark-UI chrome, render a clean table on white with the
+     filter summary at the top. Table header repeats on each page, rows
+     don't split across pages.
+     ===================== */
+  @media print {
+    @page {
+      margin: 0.5in;
+      size: letter portrait;
+    }
+
+    /* Reset colors to print-friendly values regardless of theme */
+    html, body, .app {
+      background: #fff !important;
+      color: #111 !important;
+    }
+
+    /* Hide everything that isn't the data */
+    header,
+    .data-bar,
+    .search-bar,
+    .toggles,
+    .results-header,
+    .drop-overlay,
+    footer,
+    #toast,
+    #empty {
+      display: none !important;
+    }
+
+    .app {
+      padding: 0;
+      max-width: none;
+    }
+
+    .results-area {
+      padding: 0;
+      background: transparent;
+      border: none;
+    }
+
+    /* Show + style the print summary */
+    #print-summary {
+      display: block;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #111;
+    }
+    #print-summary .ps-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #111;
+    }
+    #print-summary .ps-version {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #555;
+      vertical-align: 2px;
+      margin-left: 6px;
+    }
+    #print-summary .ps-meta {
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #444;
+      letter-spacing: 0.4px;
+    }
+    #print-summary .ps-sep {
+      margin: 0 8px;
+      color: #999;
+    }
+    #print-summary .ps-filters {
+      margin-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: #111;
+      line-height: 1.5;
+    }
+    #print-summary .ps-filter-label {
+      color: #555;
+      margin-right: 4px;
+    }
+    #print-summary .ps-filter-value {
+      font-weight: 700;
+      margin-right: 14px;
+    }
+
+    /* Table — clean, repeats header on each page, rows stay together */
+    #table-wrap {
+      overflow: visible;
+      border: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+      color: #111;
+    }
+    thead {
+      display: table-header-group;
+    }
+    thead th {
+      background: #f0f0f0 !important;
+      color: #111 !important;
+      border-bottom: 1.5px solid #111 !important;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 5px 6px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    thead th.num { text-align: right; }
+    tbody tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+      background: #fff !important;
+      color: #111 !important;
+    }
+    tbody td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #ccc;
+      color: #111 !important;
+      background: #fff !important;
+      font-size: 10px;
+      vertical-align: top;
+    }
+
+    /* Part # — keep prominent in monospace, no badge bg */
+    .part-badge,
+    .part-text {
+      background: transparent !important;
+      color: #111 !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+    .part-badge .copy-icon { display: none !important; }
+    .col-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Bin chip — flatten to plain text on paper */
+    .bin-tag {
+      background: transparent !important;
+      color: #111 !important;
+      border: 1px solid #999 !important;
+      padding: 1px 5px !important;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+    }
+    .bin-empty {
+      color: #999 !important;
+    }
+
+    /* Numeric columns right-aligned */
+    .num,
+    .col-qty,
+    .col-cost {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* Hide any in-page highlights so they don't muddy the print */
+    .hl {
+      background: transparent !important;
+      color: #111 !important;
+      font-weight: 700;
+    }
+
+    /* Suppress note coloring — print as plain italic */
+    .note {
+      color: #555 !important;
+      font-style: italic;
+    }
+
+    /* Force any qty/cost color codings to neutral */
+    .col-qty.low, .col-qty.zero, .col-qty.high {
+      color: #111 !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -994,7 +1192,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.3.0</span></h1>
+        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.4.0</span></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1005,7 +1203,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.3.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.4.0"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1035,6 +1233,10 @@
       <button class="data-btn ghost" id="btn-reset" title="Revert to the built-in dataset" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M4 8a8 8 0 0 1 14 -3"/><path d="M18 2v6h-6"/><path d="M20 16a8 8 0 0 1 -14 3"/><path d="M6 22v-6h6"/></svg>
         Reset
+      </button>
+      <button class="data-btn" id="btn-print" title="Print the current filtered list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print
       </button>
     </div>
     <input type="file" id="file-input" accept=".csv,text/csv" style="display:none">
@@ -1078,6 +1280,17 @@
         <button class="sort-btn" data-sort="qty">Qty</button>
         <button class="sort-btn" data-sort="cost">Cost</button>
       </div>
+    </div>
+    <div id="print-summary" aria-hidden="true">
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.4.0</span></div>
+      <div class="ps-meta">
+        <span id="ps-dataset">Built-in snapshot</span>
+        <span class="ps-sep">·</span>
+        <span id="ps-count">0 of 0 parts</span>
+        <span class="ps-sep">·</span>
+        <span id="ps-date"></span>
+      </div>
+      <div id="ps-filters" class="ps-filters"></div>
     </div>
     <div id="table-wrap">
       <table>
@@ -1146,6 +1359,11 @@ const $lblDark = document.getElementById("lbl-dark");
 const $lblLight = document.getElementById("lbl-light");
 const $btnUpload = document.getElementById("btn-upload");
 const $btnReset = document.getElementById("btn-reset");
+const $btnPrint = document.getElementById("btn-print");
+const $psDataset = document.getElementById("ps-dataset");
+const $psCount = document.getElementById("ps-count");
+const $psDate = document.getElementById("ps-date");
+const $psFilters = document.getElementById("ps-filters");
 const $fileInput = document.getElementById("file-input");
 const $dropOverlay = document.getElementById("drop-overlay");
 const $dataSource = document.getElementById("data-source");
@@ -1625,9 +1843,54 @@ function resetToBaseline() {
   showToast("Reset", "Reverted to built-in snapshot (" + INVENTORY.length.toLocaleString() + " rows)");
 }
 
+// ---------- Print ----------
+// Populates the print-summary block with title, dataset, count, date, and the
+// currently-applied filters so the printed sheet has context at the top. The
+// summary is hidden on screen via CSS and only revealed under @media print.
+function updatePrintSummary() {
+  const filters = [];
+  const term = ($search.value || "").trim();
+  if (term) filters.push(["Search", term]);
+  if ($mfrFilter.value) filters.push(["Make", $mfrFilter.value]);
+  if ($inStock.checked) filters.push(["In stock only", null]);
+  if ($multiWord.checked) filters.push(["Match all words", null]);
+  if (bulkMode === "only") filters.push(["Bulk only", null]);
+  if (bulkMode === "hide") filters.push(["Hide bulk", null]);
+  if (sortMode !== "relevance") {
+    const sortLabel = sortMode === "part" ? "Part #" : sortMode === "qty" ? "Qty" : sortMode === "cost" ? "Cost" : sortMode;
+    filters.push(["Sort", sortLabel]);
+  }
+
+  $psDataset.textContent = "Dataset: " + ($dataSourceLabel.textContent || "—");
+  $psCount.textContent =
+    "Showing " + $shownCount.textContent + " of " + $filteredCount.textContent +
+    " (total " + $totalCount.textContent + ")";
+  $psDate.textContent = "Printed " + new Date().toLocaleDateString("en-US", {
+    year: "numeric", month: "short", day: "numeric"
+  });
+
+  if (filters.length === 0) {
+    $psFilters.innerHTML = '<span class="ps-filter-label">No filters applied</span>';
+  } else {
+    $psFilters.innerHTML = filters.map(([label, value]) => {
+      if (value == null) {
+        return '<span class="ps-filter-value">' + escapeHtml(label) + '</span>';
+      }
+      return '<span class="ps-filter-label">' + escapeHtml(label) + ':</span>' +
+        '<span class="ps-filter-value">' + escapeHtml(value) + '</span>';
+    }).join("");
+  }
+}
+
 // ---------- Wire up UI ----------
 $btnUpload.addEventListener("click", () => $fileInput.click());
 $btnReset.addEventListener("click", resetToBaseline);
+$btnPrint.addEventListener("click", () => {
+  updatePrintSummary();
+  window.print();
+});
+// Also refresh on browser-driven prints (Ctrl/Cmd+P, browser menu).
+window.addEventListener("beforeprint", updatePrintSummary);
 $fileInput.addEventListener("change", (e) => {
   const f = e.target.files && e.target.files[0];
   if (f) handleFile(f);
