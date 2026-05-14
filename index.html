@@ -1239,14 +1239,30 @@
     .col-desc { word-break: break-word; }
 
     /* Part # — keep prominent in monospace, no badge bg.
-       Allow long part numbers (e.g. "1259260CARDGT") to wrap to a second
-       line rather than clip the right edge of the column. */
-    .part-badge,
+       Allow long part numbers (e.g. "SUIME24COB-WR1") to wrap to a second
+       line rather than overflow into the Description column.
+       Critical: .part-badge is display:inline-flex on screen, which creates
+       a layout context that doesn't honor parent word-break rules. We force
+       it back to normal inline flow in print so the td's break-all + the
+       fixed column width can actually constrain the part number. */
+    .part-badge {
+      display: inline !important;
+      background: transparent !important;
+      color: #111 !important;
+      padding: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      align-items: initial;
+      gap: 0;
+    }
     .part-text {
       background: transparent !important;
       color: #111 !important;
       padding: 0 !important;
       border: none !important;
+      display: inline;
+      overflow-wrap: anywhere;
+      word-break: break-all;
     }
     .part-badge .copy-icon { display: none !important; }
     .col-part {
@@ -1315,7 +1331,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.6.0</span></h1>
+        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.6.1</span></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1326,7 +1342,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.6.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.6.1"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1405,7 +1421,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.6.0</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.6.1</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>

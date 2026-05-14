@@ -14,6 +14,13 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.6.1] — 2026-05-14
+
+### Fixed
+- **Part # column overlapping Description in print.** Long part numbers (`SUIME24COB-WR1`, `48120X2-3135`, etc.) were rendering on a single line and overflowing into the next column. Root cause: `.part-badge` is `display: inline-flex` on screen, which creates a flex layout context that doesn't honor parent `word-break` rules. Print CSS now forces it back to plain inline flow so the cell's fixed column width + `break-all` can actually constrain the part text and wrap it to a second line.
+
+---
+
 ## [0.6.0] — 2026-05-14
 
 ### Added
