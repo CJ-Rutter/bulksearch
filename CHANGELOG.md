@@ -14,6 +14,13 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.6.2] — 2026-05-14
+
+### Fixed
+- **Part # column overlap, take two.** v0.6.1 forced `.part-badge` back to `display: inline` but missed that the parent `.col-part` cell has `white-space: nowrap` set globally for the on-screen layout. `nowrap` forbids wrapping at the cell level, so `word-break: break-all` never got a chance to fire. Print CSS now explicitly overrides `white-space` to `normal` on `.col-part`, `.part-badge`, and `.part-text` (plus keeps the wrap rules from before). Long part numbers now actually wrap to a second line inside the column.
+
+---
+
 ## [0.6.1] — 2026-05-14
 
 ### Fixed

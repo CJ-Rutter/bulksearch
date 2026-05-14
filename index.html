@@ -1241,10 +1241,22 @@
     /* Part # — keep prominent in monospace, no badge bg.
        Allow long part numbers (e.g. "SUIME24COB-WR1") to wrap to a second
        line rather than overflow into the Description column.
-       Critical: .part-badge is display:inline-flex on screen, which creates
-       a layout context that doesn't honor parent word-break rules. We force
-       it back to normal inline flow in print so the td's break-all + the
-       fixed column width can actually constrain the part number. */
+
+       Three things were fighting wrapping on screen, all need explicit
+       overrides in print:
+         1. .col-part has `white-space: nowrap` (cell-level)
+         2. .part-badge is display:inline-flex (flex children ignore wrap rules)
+         3. .part-text doesn't have its own break rules
+
+       Force them all to plain inline + break-anywhere here so the td's
+       fixed column width can constrain the text. */
+    .col-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      white-space: normal !important;
+      overflow-wrap: anywhere;
+      word-break: break-all;
+    }
     .part-badge {
       display: inline !important;
       background: transparent !important;
@@ -1252,8 +1264,9 @@
       padding: 0 !important;
       border: none !important;
       box-shadow: none !important;
-      align-items: initial;
-      gap: 0;
+      white-space: normal !important;
+      overflow-wrap: anywhere;
+      word-break: break-all;
     }
     .part-text {
       background: transparent !important;
@@ -1261,16 +1274,11 @@
       padding: 0 !important;
       border: none !important;
       display: inline;
+      white-space: normal !important;
       overflow-wrap: anywhere;
       word-break: break-all;
     }
     .part-badge .copy-icon { display: none !important; }
-    .col-part {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      overflow-wrap: anywhere;
-      word-break: break-all;
-    }
 
     /* Bin chip — flatten to plain text on paper, allow wrap inside the cell
        so descriptive bin values (e.g. "Parts Room Leaning on Wall by Batteries")
@@ -1331,7 +1339,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.6.1</span></h1>
+        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.6.2</span></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1342,7 +1350,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.6.1"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.6.2"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1421,7 +1429,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.6.1</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.6.2</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
