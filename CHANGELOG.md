@@ -14,6 +14,17 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.3.0] — 2026-05-14
+
+### Added
+- Version chip in the header next to the BulkSearch wordmark, in the industrial accent palette.
+- "Feedback" button in the header-meta row — opens a mailto to cj.rutter@equipmentshare.com with the subject prefilled to identify the tool + version.
+
+### Notes
+- Matches the ES-tool UI convention established on RentalPulse: every work-facing repo needs a version badge near the title and a Feedback button routing to the maintainer.
+
+---
+
 ## [0.2.0] — Branding + multi-data
 
 ### Added
