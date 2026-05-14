@@ -14,6 +14,20 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.5.0] — 2026-05-14
+
+### Changed
+- **Ships blank.** The embedded `INVENTORY` array is now empty — BulkSearch is a generic search-shell that requires a CSV upload to do anything. Removes ~252KB of ES-specific parts data from the bundle and makes the repo safe to publish.
+- **"Reset" → "Clear data."** With no built-in baseline, the button now wipes whatever CSV is loaded (and its localStorage cache) back to the empty state. Icon swapped to a trash glyph.
+- **Empty state is now contextual.** No data loaded → friendly "Upload a CSV to get started" with a pointer at the Upload CSV button. No matches in filter → original "/ / /" empty-state design.
+- **Header strip cleaned up** — removed the hard-coded `2026-04-22` snapshot date; the date now only appears when a user-uploaded CSV is loaded.
+
+### Notes
+- Repo flipped to **public** in this release. With the data stripped, the tool itself is a generic parts-search utility that's fine to share. The data your coworkers load stays in their browser — single-page app, no backend.
+- Live URL: https://cj-rutter.github.io/bulksearch/ (served via GitHub Pages from the `main` branch root).
+
+---
+
 ## [0.4.2] — 2026-05-14
 
 ### Fixed

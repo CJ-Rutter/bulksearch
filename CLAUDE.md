@@ -11,8 +11,8 @@
 
 ## Architecture
 
-- One HTML file. Inventory is embedded as a JS array (`const INVENTORY = [...]`) AND/OR loaded via CSV upload.
-- `currentData` is the working dataset — gets replaced when a new CSV is uploaded.
+- One HTML file. **Ships blank** — `const INVENTORY = []`. The tool is a generic shell; users supply their own data via CSV upload.
+- `currentData` is the working dataset — populated from the uploaded CSV. Survives page reloads via localStorage (key `parts-search-custom-data`).
 - Filtering happens in a single loop over `currentData` driven by:
   - `searchInput.value` — substring match against part #, description, MFR
   - `mfrFilter.value` — exact MFR match
@@ -31,7 +31,7 @@
 
 - Don't add a build step. Single-file is a feature.
 - Don't add a backend. Don't add user accounts.
-- Don't bundle real customer-specific data with the repo. Sample CSV in `data/` should be sanitized.
+- Don't ever re-introduce a hard-coded INVENTORY array in the repo — the public version ships blank and that's the point. Sample CSVs for local testing go in `data/` (gitignored) or `docs/`, sanitized only.
 - Don't break the "Part # is the most prominent column" rule. Description and MFR are supporting.
 - Don't auto-sort by anything other than part # ascending unless the user explicitly clicks a column header.
 
