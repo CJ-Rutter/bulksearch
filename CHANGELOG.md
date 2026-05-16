@@ -11,6 +11,15 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 - Keyboard nav (arrow keys to move between rows, Enter to copy part #)
 - Recent searches history (localStorage)
 - Export filtered results to CSV
+- Iterate on `cleanDescription` once real messy cases surface (acronym preservation, common abbreviations)
+
+---
+
+## [0.7.0] — 2026-05-15
+
+### Added
+- **Bulk Cheat Sheet tab.** New top-level view alongside Search, scoped to bulk items only (MFR starts with `BULK`). Compact 3-column table — Part # / Description / Bin Location — sorted by Bin then Part #, with a thin divider between bin groups so the eye can chunk. Search box is reused and scoped to bulk rows while the tab is active; toggles / MFR filter / sort controls hide for that view.
+- **Description normalization** (`cleanDescription`). Title-cases shouty source data, collapses internal whitespace, and spaces out common unit suffixes (`33LB` → `33 lb`). Conservative whitelist of units to avoid breaking model numbers like `UL32A`. First-pass implementation; will iterate as messy real-world cases surface.
 
 ---
 

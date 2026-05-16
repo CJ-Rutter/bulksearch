@@ -672,6 +672,125 @@
   }
   html[data-theme="light"] .seg-btn.active { color: #fff; }
 
+  /* Top-level tab bar — switches between Search view and Bulk Cheat Sheet.
+     Lives between the data bar and the filter row so both views inherit the
+     upload/print controls but get their own filters/output below. */
+  .view-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    background: var(--bg-elev);
+  }
+  .view-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font: 600 12px/1 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .view-tab:hover { color: var(--text); }
+  .view-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  /* Hide chrome that's irrelevant for the cheat sheet view (toggles, sort
+     controls etc.). The body[data-view="cheatsheet"] selector toggles these. */
+  body[data-view="cheatsheet"] .toggles,
+  body[data-view="cheatsheet"] .mfr-filter,
+  body[data-view="cheatsheet"] .results-area,
+  body[data-view="search"] .cheatsheet-area {
+    display: none !important;
+  }
+
+  /* Cheat sheet view — compact table sorted by Bin then Part #. Bulk only.
+     Three columns; description gets pre-normalized for readability. */
+  .cheatsheet-area {
+    flex: 1;
+    padding: 24px 28px;
+    overflow-x: auto;
+  }
+  .cs-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border-bright);
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .cs-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+  .cs-count strong {
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .cs-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    opacity: .75;
+  }
+  .cheatsheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cheatsheet-table thead th {
+    text-align: left;
+    font: 600 11px/1.2 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-bright);
+    background: var(--bg-elev);
+  }
+  .cheatsheet-table tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .cheatsheet-table tbody tr:hover td { background: var(--bg-elev); }
+  .cs-part {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .cs-bin {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    word-break: break-word;
+  }
+  .cs-desc { color: var(--text); word-break: break-word; }
+  .cs-bin-changed td { border-top: 2px solid var(--border-bright); }
+  .cs-empty {
+    padding: 32px 12px;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  @media print {
+    .view-tabs, .search-bar, .data-bar { display: none !important; }
+    .cheatsheet-table { font-size: 11pt; }
+    .cheatsheet-table thead { display: table-header-group; }
+    .cheatsheet-table tbody tr { page-break-inside: avoid; }
+  }
+
   .results-area {
     flex: 1;
     padding: 24px 28px;
@@ -1339,7 +1458,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.6.2</span></h1>
+        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.7.0</span></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1350,7 +1469,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.6.2"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.7.0"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1387,6 +1506,11 @@
       </button>
     </div>
     <input type="file" id="file-input" accept=".csv,text/csv" style="display:none">
+  </div>
+
+  <div class="view-tabs" role="tablist" aria-label="View">
+    <button class="view-tab active" data-view="search" role="tab" aria-selected="true">Search</button>
+    <button class="view-tab" data-view="cheatsheet" role="tab" aria-selected="false">Bulk Cheat Sheet</button>
   </div>
 
   <div class="search-bar">
@@ -1429,7 +1553,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.6.2</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.7.0</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
@@ -1466,6 +1590,24 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="cheatsheet-area" aria-label="Bulk Cheat Sheet">
+    <div class="cs-header">
+      <div class="cs-count">Showing <strong id="cs-shown-count">0</strong> bulk items</div>
+      <div class="cs-hint">Sorted by Bin · Part #</div>
+    </div>
+    <table class="cheatsheet-table">
+      <thead>
+        <tr>
+          <th style="width: 14%">Part #</th>
+          <th>Description</th>
+          <th style="width: 28%">Bin Location</th>
+        </tr>
+      </thead>
+      <tbody id="cs-tbody"></tbody>
+    </table>
+    <div id="cs-empty" class="cs-empty" style="display:none">No bulk items match.</div>
   </div>
 
   <footer>
@@ -1725,11 +1867,127 @@ function render(terms) {
   $tbody.innerHTML = html;
 }
 
+// ---------- Bulk Cheat Sheet view ----------
+
+// Common unit suffixes worth space-padding when they're glued to a number
+// (e.g. "33LB" → "33 lb"). Conservative whitelist — generic digit-letter
+// spacing would break model numbers like UL32A. Add to this list as the
+// user surfaces real cases.
+const BULK_UNITS = ["LB","LBS","OZ","GAL","QT","PT","ML","KG","FT","IN","CM","MM","HP"];
+
+// Normalize a bulk-item description for the cheat sheet. The source data
+// arrives in messy all-caps shorthand; the cheat sheet's job is to make it
+// scannable on a phone or printed sheet. Title-cases if the source is mostly
+// uppercase, collapses whitespace, and spaces out glued unit suffixes.
+function cleanDescription(s) {
+  s = String(s ?? "").trim().replace(/\s+/g, " ");
+  if (!s) return "";
+  const letters = s.replace(/[^A-Za-z]/g, "");
+  const upperCount = letters.replace(/[a-z]/g, "").length;
+  const mostlyUpper = letters.length === 0 || (upperCount / letters.length) > 0.7;
+  if (mostlyUpper) {
+    s = s.toLowerCase().replace(/\b([a-z])/g, (_, c) => c.toUpperCase());
+  }
+  for (const u of BULK_UNITS) {
+    const re = new RegExp("(\\d)" + u + "\\b", "gi");
+    s = s.replace(re, (_, d) => d + " " + u.toLowerCase());
+  }
+  return s;
+}
+
+const $cs_tbody = document.getElementById("cs-tbody");
+const $cs_shown = document.getElementById("cs-shown-count");
+const $cs_empty = document.getElementById("cs-empty");
+let activeView = "search";
+
+// The cheat sheet filters bulk-only rows (MFR starts with "BULK") and applies
+// the same search box. Branches off currentData so it stays in sync with
+// uploads/resets without piggybacking on the main filtered list.
+function renderCheatSheet() {
+  const q = $search.value.trim().toLowerCase();
+  const terms = q ? q.split(/\s+/).filter(Boolean) : [];
+  const cmpStr = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" }).compare;
+  const matches = currentData.filter(row => {
+    const mfr = String(row.mfr || "").trim().toUpperCase();
+    if (!mfr.startsWith("BULK")) return false;
+    if (!terms.length) return true;
+    const cleaned = cleanDescription(row.desc);
+    const bag = (
+      String(row.part || "") + " " +
+      String(row.desc || "") + " " +
+      cleaned + " " +
+      String(row.bin || "") + " " +
+      String(row.mfr || "") + " " +
+      String(row.note || "")
+    ).toLowerCase();
+    return terms.every(t => bag.includes(t));
+  });
+  matches.sort((a, b) => {
+    const ka = String(a.bin || "").trim();
+    const kb = String(b.bin || "").trim();
+    if (!ka && kb) return 1;
+    if (ka && !kb) return -1;
+    const c = cmpStr(ka, kb);
+    if (c !== 0) return c;
+    return cmpStr(String(a.part || ""), String(b.part || ""));
+  });
+  $cs_shown.textContent = matches.length.toLocaleString();
+  if (!matches.length) {
+    $cs_tbody.innerHTML = "";
+    $cs_empty.style.display = "";
+    $cs_empty.textContent = currentData.length === 0
+      ? "Upload a CSV to populate the cheat sheet."
+      : "No bulk items match.";
+    return;
+  }
+  $cs_empty.style.display = "none";
+  let lastBin = null;
+  const html = matches.map(row => {
+    const bin = String(row.bin || "").trim();
+    const newBinClass = (bin !== lastBin) ? " cs-bin-changed" : "";
+    lastBin = bin;
+    return (
+      '<tr class="cs-row' + newBinClass + '">' +
+        '<td class="cs-part">' + escapeHtml(row.part || "") + '</td>' +
+        '<td class="cs-desc">' + escapeHtml(cleanDescription(row.desc)) + '</td>' +
+        '<td class="cs-bin">' + escapeHtml(bin || "—") + '</td>' +
+      '</tr>'
+    );
+  }).join("");
+  $cs_tbody.innerHTML = html;
+}
+
+function setView(v) {
+  activeView = v;
+  document.body.dataset.view = v;
+  document.querySelectorAll(".view-tab").forEach(b => {
+    const on = b.dataset.view === v;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", String(on));
+  });
+  if (v === "cheatsheet") {
+    renderCheatSheet();
+    $search.placeholder = "Search bulk items by part #, description, bin…";
+  } else {
+    $search.placeholder = "Search part #, description, make, bin location, notes…  (try: filter, SG3, propane, UL32A)";
+  }
+}
+
+document.querySelectorAll(".view-tab").forEach(b => {
+  b.addEventListener("click", () => setView(b.dataset.view));
+});
+
+// Boot into the search view by default.
+document.body.dataset.view = "search";
+
 // ---------- Events ----------
 let debounceT;
 $search.addEventListener("input", () => {
   clearTimeout(debounceT);
-  debounceT = setTimeout(update, 60);
+  debounceT = setTimeout(() => {
+    if (activeView === "cheatsheet") renderCheatSheet();
+    else update();
+  }, 60);
 });
 
 $mfrFilter.addEventListener("change", update);
@@ -1946,6 +2204,9 @@ function loadDataset(data, meta) {
   });
   updateSourceUI(meta);
   update();
+  // Keep the cheat sheet view in sync after any dataset swap, regardless
+  // of which tab is currently active.
+  renderCheatSheet();
 }
 
 // ---------- File handling ----------
