@@ -15,6 +15,13 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.8.0] — 2026-05-15
+
+### Added
+- **QC27 / QC30 featured section on Bulk Cheat Sheet.** Quick-coupler excavator buckets get pulled out of the flat table and rendered as a structured tree at the top: `QC27 Buckets` / `QC30 Buckets` → bucket width (12", 18", 24", 36", 48") → Dig (toothed edge) / Clean (smooth, including ditching buckets) → part number with capacity range and bin location. Lets a coordinator land on "I need a 24-inch QC30 dig bucket" in seconds without scrolling the whole sheet. The rest of the bulk items continue below in the existing compact table.
+
+---
+
 ## [0.7.0] — 2026-05-15
 
 ### Added

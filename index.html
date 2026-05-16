@@ -777,6 +777,105 @@
   }
   .cs-desc { color: var(--text); word-break: break-word; }
   .cs-bin-changed td { border-top: 2px solid var(--border-bright); }
+
+  /* Featured QC bucket tree — renders above the compact table when the
+     loaded CSV contains QC27/QC30 quick-coupler excavator buckets. Grouped
+     by coupler size → bucket width → Clean/Dig so a coordinator scanning
+     for "24-inch QC30 dig bucket" can land on the part number in seconds. */
+  .qc-featured {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--border-bright);
+  }
+  .qc-featured-title {
+    font: 600 11px/1 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .qc-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 880px) { .qc-grid { grid-template-columns: 1fr 1fr; } }
+  .qc-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .qc-card-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .qc-size {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 8px 12px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--border);
+  }
+  .qc-size:first-of-type { border-top: none; padding-top: 0; }
+  .qc-size-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    padding-top: 2px;
+  }
+  .qc-bucket-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .qc-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    flex-wrap: wrap;
+  }
+  .qc-kind {
+    flex-shrink: 0;
+    font: 600 10px/1 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .qc-kind.dig {
+    background: rgba(217,144,33,0.15);
+    color: var(--warn, #d99021);
+    border-color: rgba(217,144,33,0.4);
+  }
+  .qc-kind.clean {
+    background: rgba(31,157,85,0.15);
+    color: var(--ok, #1f9d55);
+    border-color: rgba(31,157,85,0.4);
+  }
+  .qc-part {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .qc-cap, .qc-bin {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+  /* Fallback color tokens — BulkSearch's :root may not define --ok/--warn;
+     these defaults keep the badges legible in both themes if they're absent. */
+  :root {
+    --ok: #1f9d55;
+    --warn: #d99021;
+  }
   .cs-empty {
     padding: 32px 12px;
     text-align: center;
@@ -1458,7 +1557,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.7.0</span></h1>
+        <h1>BulkSearch <span class="brand-version" id="brand-version" title="App version">v0.8.0</span></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1469,7 +1568,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.7.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.8.0"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1553,7 +1652,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.7.0</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.8.0</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
@@ -1597,6 +1696,7 @@
       <div class="cs-count">Showing <strong id="cs-shown-count">0</strong> bulk items</div>
       <div class="cs-hint">Sorted by Bin · Part #</div>
     </div>
+    <div id="qc-featured" class="qc-featured" style="display:none"></div>
     <table class="cheatsheet-table">
       <thead>
         <tr>
@@ -1898,7 +1998,71 @@ function cleanDescription(s) {
 const $cs_tbody = document.getElementById("cs-tbody");
 const $cs_shown = document.getElementById("cs-shown-count");
 const $cs_empty = document.getElementById("cs-empty");
+const $qc_featured = document.getElementById("qc-featured");
 let activeView = "search";
+
+// Parse a bulk row into QC bucket dimensions. Returns null when the row
+// isn't a QC27/QC30 quick-coupler excavator bucket. The pattern in the
+// source data is consistent: "BUCKET 24" MINI EXCAVATOR STD QC027 NO PIN
+// CU FT 7.5-8.5 SMOOTH" — width, coupler size, capacity range, and
+// cutting-edge type (TOOTH for digging, SMOOTH/DITCHING for cleaning).
+function parseQCBucket(row) {
+  const desc = String(row.desc || "").toUpperCase();
+  if (!desc.includes("BUCKET") || !/QC0?\d{2}/.test(desc)) return null;
+  const qcM = desc.match(/QC0?(\d{2})/);
+  const wM  = desc.match(/BUCKET\s+(\d+)\s*"/);
+  const cM  = desc.match(/CU\s+(FT|YD)\s+([\d.]+)-([\d.]+)/);
+  return {
+    qc:    qcM ? parseInt(qcM[1], 10) : null,
+    width: wM  ? parseInt(wM[1], 10)  : null,
+    // Per yard convention: toothed cutting edge = Dig; smooth (incl.
+    // "DITCHING" buckets which are physically smooth) = Clean.
+    kind:  desc.includes("TOOTH") ? "Dig" : "Clean",
+    cap:   cM ? `${cM[2]}–${cM[3]} cu ${cM[1].toLowerCase()}` : "",
+    part:  row.part,
+    bin:   String(row.bin || "").trim() || "—",
+    raw:   row,
+  };
+}
+
+function renderQCFeatured(qcRows) {
+  if (!qcRows.length) { $qc_featured.style.display = "none"; $qc_featured.innerHTML = ""; return; }
+  // tree[qc][width][kind] = [row, ...]
+  const tree = {};
+  for (const r of qcRows) {
+    (tree[r.qc] ||= {});
+    (tree[r.qc][r.width] ||= { Dig: [], Clean: [] });
+    tree[r.qc][r.width][r.kind].push(r);
+  }
+  const qcSizes = Object.keys(tree).map(Number).sort((a, b) => a - b);
+  const cards = qcSizes.map(qc => {
+    const widths = Object.keys(tree[qc]).map(Number).sort((a, b) => a - b);
+    const sizeBlocks = widths.map(w => {
+      const order = ["Dig", "Clean"];
+      const rowsHtml = order.flatMap(k => (tree[qc][w][k] || []).map(it => `
+        <div class="qc-row">
+          <span class="qc-kind ${k.toLowerCase()}">${k}</span>
+          <span class="qc-part">${escapeHtml(it.part)}</span>
+          ${it.cap ? `<span class="qc-cap">${escapeHtml(it.cap)}</span>` : ""}
+          <span class="qc-bin">bin: ${escapeHtml(it.bin)}</span>
+        </div>
+      `)).join("");
+      return `
+        <div class="qc-size">
+          <div class="qc-size-label">${w}"</div>
+          <div class="qc-bucket-rows">${rowsHtml}</div>
+        </div>`;
+    }).join("");
+    return `<div class="qc-card">
+      <div class="qc-card-head">QC${qc} Buckets</div>
+      ${sizeBlocks}
+    </div>`;
+  }).join("");
+  $qc_featured.innerHTML =
+    `<div class="qc-featured-title">QC Coupler Buckets</div>
+     <div class="qc-grid">${cards}</div>`;
+  $qc_featured.style.display = "";
+}
 
 // The cheat sheet filters bulk-only rows (MFR starts with "BULK") and applies
 // the same search box. Branches off currentData so it stays in sync with
@@ -1922,7 +2086,17 @@ function renderCheatSheet() {
     ).toLowerCase();
     return terms.every(t => bag.includes(t));
   });
-  matches.sort((a, b) => {
+  // Partition out QC27/QC30 buckets first — they get the featured tree
+  // above. Everything else falls through to the standard table below.
+  const qcRows = [];
+  const tableRows = [];
+  for (const r of matches) {
+    const p = parseQCBucket(r);
+    if (p && p.qc != null && p.width != null) qcRows.push(p);
+    else tableRows.push(r);
+  }
+  qcRows.sort((a, b) => (a.qc - b.qc) || (a.width - b.width) || cmpStr(a.part, b.part));
+  tableRows.sort((a, b) => {
     const ka = String(a.bin || "").trim();
     const kb = String(b.bin || "").trim();
     if (!ka && kb) return 1;
@@ -1932,17 +2106,24 @@ function renderCheatSheet() {
     return cmpStr(String(a.part || ""), String(b.part || ""));
   });
   $cs_shown.textContent = matches.length.toLocaleString();
-  if (!matches.length) {
+
+  renderQCFeatured(qcRows);
+
+  if (!tableRows.length) {
     $cs_tbody.innerHTML = "";
-    $cs_empty.style.display = "";
-    $cs_empty.textContent = currentData.length === 0
-      ? "Upload a CSV to populate the cheat sheet."
-      : "No bulk items match.";
+    if (qcRows.length) {
+      $cs_empty.style.display = "none";
+    } else {
+      $cs_empty.style.display = "";
+      $cs_empty.textContent = currentData.length === 0
+        ? "Upload a CSV to populate the cheat sheet."
+        : "No bulk items match.";
+    }
     return;
   }
   $cs_empty.style.display = "none";
   let lastBin = null;
-  const html = matches.map(row => {
+  const html = tableRows.map(row => {
     const bin = String(row.bin || "").trim();
     const newBinClass = (bin !== lastBin) ? " cs-bin-changed" : "";
     lastBin = bin;
