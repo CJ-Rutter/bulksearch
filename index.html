@@ -1686,7 +1686,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.9.0</button></h1>
+        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.10.0</button></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1697,7 +1697,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.9.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.10.0"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1781,7 +1781,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.9.0</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.10.0</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
@@ -1826,6 +1826,7 @@
       <div class="cs-hint">Sorted by Bin · Part #</div>
     </div>
     <div id="qc-featured" class="qc-featured" style="display:none"></div>
+    <div id="bucket-featured" class="qc-featured" style="display:none"></div>
     <table class="cheatsheet-table">
       <thead>
         <tr>
@@ -2143,7 +2144,25 @@ const $cs_tbody = document.getElementById("cs-tbody");
 const $cs_shown = document.getElementById("cs-shown-count");
 const $cs_empty = document.getElementById("cs-empty");
 const $qc_featured = document.getElementById("qc-featured");
+const $bucket_featured = document.getElementById("bucket-featured");
 let activeView = "search";
+
+// Convert a millimeter value to inches, rounded to the nearest 1/16",
+// reduced to lowest terms. Pin diameters on excavator buckets are quoted
+// in mm by manufacturers (45/50/65/70/80/90 mm), but the shop floor
+// thinks in inches — this lets the cheat sheet header read "3-1/8\" Pin"
+// instead of "80mm Pin".
+function mmToInchFraction(mm) {
+  const totalSixteenths = Math.round((mm / 25.4) * 16);
+  if (totalSixteenths === 0) return '0"';
+  const whole = Math.floor(totalSixteenths / 16);
+  let num = totalSixteenths % 16;
+  let den = 16;
+  while (num > 0 && num % 2 === 0) { num /= 2; den /= 2; }
+  if (num === 0) return whole + '"';
+  if (whole === 0) return num + '/' + den + '"';
+  return whole + '-' + num + '/' + den + '"';
+}
 
 // Parse a bulk row into QC bucket dimensions. Returns null when the row
 // isn't a QC27/QC30 quick-coupler excavator bucket. The pattern in the
@@ -2208,6 +2227,78 @@ function renderQCFeatured(qcRows) {
   $qc_featured.style.display = "";
 }
 
+// Parse a non-QC bulk bucket row. Same shape as parseQCBucket but keyed on
+// pin diameter (the bushing size that determines which excavator class the
+// bucket fits) instead of the QC coupler code. Source pattern mirrors the
+// QC line: "BUCKET 24" EXCAVATOR ... 80MM ... CU YD 1.2-1.5 TOOTH" — width,
+// pin in mm, capacity range, cutting edge (TOOTH = Dig; SMOOTH/DITCHING =
+// Clean). Returns null for QC rows (they're handled separately) and for
+// anything that doesn't expose both a width and a pin size.
+function parseBucket(row) {
+  const desc = String(row.desc || "").toUpperCase();
+  if (!desc.includes("BUCKET")) return null;
+  if (/QC0?\d{2}/.test(desc)) return null;
+  const wM   = desc.match(/BUCKET\s+(\d+)\s*"/);
+  const pinM = desc.match(/(\d{2,3})\s*MM/);
+  const cM   = desc.match(/CU\s+(FT|YD)\s+([\d.]+)-([\d.]+)/);
+  if (!wM || !pinM) return null;
+  return {
+    pin:   parseInt(pinM[1], 10),
+    width: parseInt(wM[1], 10),
+    kind:  desc.includes("TOOTH") ? "Dig" : "Clean",
+    cap:   cM ? `${cM[2]}–${cM[3]} cu ${cM[1].toLowerCase()}` : "",
+    part:  row.part,
+    bin:   String(row.bin || "").trim() || "—",
+    raw:   row,
+  };
+}
+
+// Mirror of renderQCFeatured but grouped by pin diameter. Reuses the
+// .qc-card / .qc-row / .qc-size CSS so both sections look identical;
+// only the card header and the discriminator differ. Pin label shows
+// inches (3-1/8") rather than mm so it reads naturally for the techs.
+function renderBucketFeatured(bucketRows) {
+  if (!bucketRows.length) {
+    $bucket_featured.style.display = "none";
+    $bucket_featured.innerHTML = "";
+    return;
+  }
+  const tree = {};
+  for (const r of bucketRows) {
+    (tree[r.pin] ||= {});
+    (tree[r.pin][r.width] ||= { Dig: [], Clean: [] });
+    tree[r.pin][r.width][r.kind].push(r);
+  }
+  const pinSizes = Object.keys(tree).map(Number).sort((a, b) => a - b);
+  const cards = pinSizes.map(pin => {
+    const widths = Object.keys(tree[pin]).map(Number).sort((a, b) => a - b);
+    const sizeBlocks = widths.map(w => {
+      const order = ["Dig", "Clean"];
+      const rowsHtml = order.flatMap(k => (tree[pin][w][k] || []).map(it => `
+        <div class="qc-row">
+          <span class="qc-kind ${k.toLowerCase()}">${k}</span>
+          <span class="part-badge" data-copy="${escapeHtml(it.part)}" title="Click to copy part #"><span class="part-text">${escapeHtml(it.part)}</span><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><rect x="9" y="9" width="11" height="11"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></span>
+          ${it.cap ? `<span class="qc-cap">${escapeHtml(it.cap)}</span>` : ""}
+          <span class="qc-bin">bin: ${escapeHtml(it.bin)}</span>
+        </div>
+      `)).join("");
+      return `
+        <div class="qc-size">
+          <div class="qc-size-label">${w}"</div>
+          <div class="qc-bucket-rows">${rowsHtml}</div>
+        </div>`;
+    }).join("");
+    return `<div class="qc-card">
+      <div class="qc-card-head">${mmToInchFraction(pin)} Pin</div>
+      ${sizeBlocks}
+    </div>`;
+  }).join("");
+  $bucket_featured.innerHTML =
+    `<div class="qc-featured-title">Excavator Buckets — by Pin Diameter</div>
+     <div class="qc-grid">${cards}</div>`;
+  $bucket_featured.style.display = "";
+}
+
 // The cheat sheet filters bulk-only rows (MFR starts with "BULK") and applies
 // the same search box. Branches off currentData so it stays in sync with
 // uploads/resets without piggybacking on the main filtered list.
@@ -2230,16 +2321,21 @@ function renderCheatSheet() {
     ).toLowerCase();
     return terms.every(t => bag.includes(t));
   });
-  // Partition out QC27/QC30 buckets first — they get the featured tree
-  // above. Everything else falls through to the standard table below.
+  // Partition: QC buckets feed the QC card tree, other excavator buckets
+  // (with a parseable pin diameter and width) feed the pin-diameter tree
+  // below it, everything else falls through to the flat table.
   const qcRows = [];
+  const bucketRows = [];
   const tableRows = [];
   for (const r of matches) {
-    const p = parseQCBucket(r);
-    if (p && p.qc != null && p.width != null) qcRows.push(p);
-    else tableRows.push(r);
+    const qc = parseQCBucket(r);
+    if (qc && qc.qc != null && qc.width != null) { qcRows.push(qc); continue; }
+    const bk = parseBucket(r);
+    if (bk && bk.pin != null && bk.width != null) { bucketRows.push(bk); continue; }
+    tableRows.push(r);
   }
   qcRows.sort((a, b) => (a.qc - b.qc) || (a.width - b.width) || cmpStr(a.part, b.part));
+  bucketRows.sort((a, b) => (a.pin - b.pin) || (a.width - b.width) || cmpStr(a.part, b.part));
   tableRows.sort((a, b) => {
     const ka = String(a.bin || "").trim();
     const kb = String(b.bin || "").trim();
@@ -2252,10 +2348,11 @@ function renderCheatSheet() {
   $cs_shown.textContent = matches.length.toLocaleString();
 
   renderQCFeatured(qcRows);
+  renderBucketFeatured(bucketRows);
 
   if (!tableRows.length) {
     $cs_tbody.innerHTML = "";
-    if (qcRows.length) {
+    if (qcRows.length || bucketRows.length) {
       $cs_empty.style.display = "none";
     } else {
       $cs_empty.style.display = "";

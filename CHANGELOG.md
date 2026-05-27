@@ -15,6 +15,17 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.10.0] — 2026-05-27
+
+### Added
+- **Excavator buckets — by Pin Diameter** featured section on the Bulk Cheat Sheet. Mirror of the QC27/QC30 card tree but keyed on pin diameter (the bushing size that determines which excavator class the bucket fits) instead of coupler code. Same Dig (toothed) / Clean (smooth, incl. ditching) split, same width sub-rows, same capacity + bin annotation. Lets a coordinator land on "I need a 24-inch dig bucket for an 80mm pin machine" without scrolling the flat table.
+- **mm → inches conversion on pin labels.** Source descriptions quote pin diameters in mm (45/50/65/70/80/90); the cheat sheet header renders the inch equivalent rounded to the nearest 1/16" and reduced (e.g. `80mm` → `3-1/8" Pin`, `65mm` → `2-9/16" Pin`) so it reads naturally for the shop floor.
+
+### Notes
+- The non-QC bucket parser (`parseBucket`) requires both a width (`BUCKET NN"`) and a pin token (`NNMM`) in the source description; rows missing either fall through to the flat table.
+
+---
+
 ## [0.9.0] — 2026-05-27
 
 ### Added
