@@ -819,6 +819,13 @@
     grid-template-columns: 1fr;
   }
   @media (min-width: 880px) { .qc-grid { grid-template-columns: 1fr 1fr; } }
+  /* Used by single-axis panels (e.g. Core Drill Bits) — one card spans
+     the full panel width with size rows flowing into two visual columns
+     on desktop, so 15+ entries don't stack into a tall single column. */
+  @media (min-width: 880px) {
+    .qc-card-columns { column-count: 2; column-gap: 28px; }
+    .qc-card-columns > .qc-size { break-inside: avoid; }
+  }
   .qc-card {
     background: var(--bg-elev);
     border: 1px solid var(--border-bright);
@@ -1693,7 +1700,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.12.0</button></h1>
+        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.13.0</button></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1704,7 +1711,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.12.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.13.0"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1788,7 +1795,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.12.0</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.13.0</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
@@ -1835,6 +1842,7 @@
     <div id="qc-featured" class="qc-featured" style="display:none"></div>
     <div id="bucket-featured" class="qc-featured" style="display:none"></div>
     <div id="auger-featured" class="qc-featured" style="display:none"></div>
+    <div id="coredrill-featured" class="qc-featured" style="display:none"></div>
     <table class="cheatsheet-table">
       <thead>
         <tr>
@@ -2154,6 +2162,7 @@ const $cs_empty = document.getElementById("cs-empty");
 const $qc_featured = document.getElementById("qc-featured");
 const $bucket_featured = document.getElementById("bucket-featured");
 const $auger_featured = document.getElementById("auger-featured");
+const $coredrill_featured = document.getElementById("coredrill-featured");
 let activeView = "search";
 
 // Convert a millimeter value to inches, rounded to the nearest 1/16",
@@ -2417,6 +2426,59 @@ function renderAugerFeatured(rows) {
   $auger_featured.style.display = "";
 }
 
+// Parse a bulk core drill bit row. Source pattern is "CORE DRILL BIT NN""
+// where NN can be a whole inch (e.g. 10") or a mixed fraction (e.g. 1-1/2",
+// 2-1/2"). Returns the original size string for display plus a numeric
+// value for sorting.
+function parseCoreDrillBit(row) {
+  const desc = String(row.desc || "").toUpperCase();
+  if (!desc.includes("CORE DRILL BIT")) return null;
+  const m = desc.match(/CORE\s+DRILL\s+BIT\s+(\d+(?:-\d+\/\d+)?)\s*"/);
+  if (!m) return null;
+  const sizeStr = m[1];
+  let sizeNum;
+  if (sizeStr.includes("-")) {
+    const [whole, frac] = sizeStr.split("-");
+    const [num, den] = frac.split("/");
+    sizeNum = parseInt(whole, 10) + parseInt(num, 10) / parseInt(den, 10);
+  } else {
+    sizeNum = parseFloat(sizeStr);
+  }
+  return {
+    size:    sizeNum,
+    sizeStr: sizeStr + '"',
+    part:    row.part,
+    bin:     String(row.bin || "").trim() || "—",
+    raw:     row,
+  };
+}
+
+// Single-axis panel: just diameter, no length, no type. Renders one
+// full-width card with all sizes flowing into two visual columns on
+// desktop (.qc-card-columns), so the 15-entry list stays compact.
+function renderCoreDrillFeatured(rows) {
+  if (!rows.length) {
+    $coredrill_featured.style.display = "none";
+    $coredrill_featured.innerHTML = "";
+    return;
+  }
+  const sizeBlocks = rows.map(it => `
+    <div class="qc-size">
+      <div class="qc-size-label">${escapeHtml(it.sizeStr)}</div>
+      <div class="qc-bucket-rows">
+        <div class="qc-row">
+          <span class="part-badge" data-copy="${escapeHtml(it.part)}" title="Click to copy part #"><span class="part-text">${escapeHtml(it.part)}</span><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><rect x="9" y="9" width="11" height="11"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></span>
+          <span class="qc-bin">bin: ${escapeHtml(it.bin)}</span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+  $coredrill_featured.innerHTML =
+    `<div class="qc-featured-title">Core Drill Bits — by Diameter</div>
+     <div class="qc-card qc-card-columns">${sizeBlocks}</div>`;
+  $coredrill_featured.style.display = "";
+}
+
 // The cheat sheet filters bulk-only rows (MFR starts with "BULK") and applies
 // the same search box. Branches off currentData so it stays in sync with
 // uploads/resets without piggybacking on the main filtered list.
@@ -2440,10 +2502,12 @@ function renderCheatSheet() {
     return terms.every(t => bag.includes(t));
   });
   // Partition: QC buckets → QC tree, other excavator buckets → pin-diameter
-  // tree, auger bits → auger tree, everything else → flat table.
+  // tree, auger bits → auger tree, core drill bits → core-drill tree,
+  // everything else → flat table.
   const qcRows = [];
   const bucketRows = [];
   const augerRows = [];
+  const coreDrillRows = [];
   const tableRows = [];
   for (const r of matches) {
     const qc = parseQCBucket(r);
@@ -2452,6 +2516,8 @@ function renderCheatSheet() {
     if (bk && bk.pin != null && bk.width != null) { bucketRows.push(bk); continue; }
     const ab = parseAugerBit(r);
     if (ab && ab.length != null) { augerRows.push(ab); continue; }
+    const cd = parseCoreDrillBit(r);
+    if (cd && cd.size != null) { coreDrillRows.push(cd); continue; }
     tableRows.push(r);
   }
   qcRows.sort((a, b) => (a.qc - b.qc) || (a.width - b.width) || cmpStr(a.part, b.part));
@@ -2461,6 +2527,7 @@ function renderCheatSheet() {
     if (a.isExtension) return (a.length - b.length) || cmpStr(a.part, b.part);
     return (a.size - b.size) || (a.length - b.length) || cmpStr(a.part, b.part);
   });
+  coreDrillRows.sort((a, b) => (a.size - b.size) || cmpStr(a.part, b.part));
   tableRows.sort((a, b) => {
     const ka = String(a.bin || "").trim();
     const kb = String(b.bin || "").trim();
@@ -2475,10 +2542,11 @@ function renderCheatSheet() {
   renderQCFeatured(qcRows);
   renderBucketFeatured(bucketRows);
   renderAugerFeatured(augerRows);
+  renderCoreDrillFeatured(coreDrillRows);
 
   if (!tableRows.length) {
     $cs_tbody.innerHTML = "";
-    if (qcRows.length || bucketRows.length || augerRows.length) {
+    if (qcRows.length || bucketRows.length || augerRows.length || coreDrillRows.length) {
       $cs_empty.style.display = "none";
     } else {
       $cs_empty.style.display = "";

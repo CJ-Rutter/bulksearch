@@ -15,6 +15,16 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.13.0] — 2026-05-27
+
+### Added
+- **Core Drill Bits panel on the Bulk Cheat Sheet.** Fourth featured section, matched on `CORE DRILL BIT NN"` (handles whole inches like `10"` and mixed fractions like `1-1/2"`, `2-1/2"`). Renders as a single full-width card listing every diameter; on desktop the sizes flow into two visual columns so the 15-entry list stays compact. Lets a coordinator land on "I need a 4-inch core bit" without scrolling the flat table.
+
+### Notes
+- Core drill bits are single-axis (diameter only — no length, no type), so they break from the card-per-discriminator pattern used by the bucket and auger panels. Future single-axis categories can reuse the `.qc-card-columns` modifier for the same compact two-column layout.
+
+---
+
 ## [0.12.0] — 2026-05-27
 
 ### Added
