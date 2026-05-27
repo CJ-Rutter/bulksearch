@@ -1686,7 +1686,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.10.0</button></h1>
+        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.11.0</button></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1697,7 +1697,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.10.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.11.0"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1781,7 +1781,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.10.0</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.11.0</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
@@ -1827,6 +1827,7 @@
     </div>
     <div id="qc-featured" class="qc-featured" style="display:none"></div>
     <div id="bucket-featured" class="qc-featured" style="display:none"></div>
+    <div id="auger-featured" class="qc-featured" style="display:none"></div>
     <table class="cheatsheet-table">
       <thead>
         <tr>
@@ -2145,6 +2146,7 @@ const $cs_shown = document.getElementById("cs-shown-count");
 const $cs_empty = document.getElementById("cs-empty");
 const $qc_featured = document.getElementById("qc-featured");
 const $bucket_featured = document.getElementById("bucket-featured");
+const $auger_featured = document.getElementById("auger-featured");
 let activeView = "search";
 
 // Convert a millimeter value to inches, rounded to the nearest 1/16",
@@ -2299,6 +2301,67 @@ function renderBucketFeatured(bucketRows) {
   $bucket_featured.style.display = "";
 }
 
+// Parse a bulk auger bit row. Source pattern: "AUGER BIT 24" X 48" 2" HEX
+// OR 2.56" ROUND EARTH TEETH" — diameter × length in inches, plus drive
+// spec and tooth type. We only need size + length for the featured grid;
+// the drive ("2" HEX OR 2.56" ROUND") is the same across the catalogue
+// so it doesn't need to discriminate. Extension auger bits have no
+// diameter and a different shape — they fall through to the flat table.
+function parseAugerBit(row) {
+  const desc = String(row.desc || "").toUpperCase();
+  if (!desc.includes("AUGER BIT")) return null;
+  if (/\bEXTENSION\b/.test(desc)) return null;
+  const m = desc.match(/AUGER\s+BIT\s+(\d+(?:\.\d+)?)\s*"\s*X\s*(\d+(?:\.\d+)?)\s*"/);
+  if (!m) return null;
+  return {
+    size:   parseFloat(m[1]),
+    length: parseFloat(m[2]),
+    part:   row.part,
+    bin:    String(row.bin || "").trim() || "—",
+    raw:    row,
+  };
+}
+
+// Mirror of the bucket renderer, grouped by diameter (size) → length →
+// part rows. No Dig/Clean axis — auger bits don't carry that distinction.
+function renderAugerFeatured(rows) {
+  if (!rows.length) {
+    $auger_featured.style.display = "none";
+    $auger_featured.innerHTML = "";
+    return;
+  }
+  const tree = {};
+  for (const r of rows) {
+    (tree[r.size] ||= {});
+    (tree[r.size][r.length] ||= []).push(r);
+  }
+  const sizes = Object.keys(tree).map(Number).sort((a, b) => a - b);
+  const cards = sizes.map(size => {
+    const lengths = Object.keys(tree[size]).map(Number).sort((a, b) => a - b);
+    const sizeBlocks = lengths.map(len => {
+      const rowsHtml = tree[size][len].map(it => `
+        <div class="qc-row">
+          <span class="part-badge" data-copy="${escapeHtml(it.part)}" title="Click to copy part #"><span class="part-text">${escapeHtml(it.part)}</span><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><rect x="9" y="9" width="11" height="11"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></span>
+          <span class="qc-bin">bin: ${escapeHtml(it.bin)}</span>
+        </div>
+      `).join("");
+      return `
+        <div class="qc-size">
+          <div class="qc-size-label">${len}"</div>
+          <div class="qc-bucket-rows">${rowsHtml}</div>
+        </div>`;
+    }).join("");
+    return `<div class="qc-card">
+      <div class="qc-card-head">${size}" Bit</div>
+      ${sizeBlocks}
+    </div>`;
+  }).join("");
+  $auger_featured.innerHTML =
+    `<div class="qc-featured-title">Auger Bits — by Size · Length</div>
+     <div class="qc-grid">${cards}</div>`;
+  $auger_featured.style.display = "";
+}
+
 // The cheat sheet filters bulk-only rows (MFR starts with "BULK") and applies
 // the same search box. Branches off currentData so it stays in sync with
 // uploads/resets without piggybacking on the main filtered list.
@@ -2321,21 +2384,24 @@ function renderCheatSheet() {
     ).toLowerCase();
     return terms.every(t => bag.includes(t));
   });
-  // Partition: QC buckets feed the QC card tree, other excavator buckets
-  // (with a parseable pin diameter and width) feed the pin-diameter tree
-  // below it, everything else falls through to the flat table.
+  // Partition: QC buckets → QC tree, other excavator buckets → pin-diameter
+  // tree, auger bits → auger tree, everything else → flat table.
   const qcRows = [];
   const bucketRows = [];
+  const augerRows = [];
   const tableRows = [];
   for (const r of matches) {
     const qc = parseQCBucket(r);
     if (qc && qc.qc != null && qc.width != null) { qcRows.push(qc); continue; }
     const bk = parseBucket(r);
     if (bk && bk.pin != null && bk.width != null) { bucketRows.push(bk); continue; }
+    const ab = parseAugerBit(r);
+    if (ab && ab.size != null && ab.length != null) { augerRows.push(ab); continue; }
     tableRows.push(r);
   }
   qcRows.sort((a, b) => (a.qc - b.qc) || (a.width - b.width) || cmpStr(a.part, b.part));
   bucketRows.sort((a, b) => (a.pin - b.pin) || (a.width - b.width) || cmpStr(a.part, b.part));
+  augerRows.sort((a, b) => (a.size - b.size) || (a.length - b.length) || cmpStr(a.part, b.part));
   tableRows.sort((a, b) => {
     const ka = String(a.bin || "").trim();
     const kb = String(b.bin || "").trim();
@@ -2349,10 +2415,11 @@ function renderCheatSheet() {
 
   renderQCFeatured(qcRows);
   renderBucketFeatured(bucketRows);
+  renderAugerFeatured(augerRows);
 
   if (!tableRows.length) {
     $cs_tbody.innerHTML = "";
-    if (qcRows.length || bucketRows.length) {
+    if (qcRows.length || bucketRows.length || augerRows.length) {
       $cs_empty.style.display = "none";
     } else {
       $cs_empty.style.display = "";

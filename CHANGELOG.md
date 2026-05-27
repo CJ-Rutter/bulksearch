@@ -15,6 +15,13 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.11.0] — 2026-05-27
+
+### Added
+- **Auger Bits featured section on the Bulk Cheat Sheet.** Third card grid below the QC and pin-diameter bucket trees, scoped to bulk auger bit rows. Same card layout, grouped by **diameter → length** (e.g. `6" Bit` card → `48"` row → part #). Lets a coordinator land on "I need a 6-inch by 4-foot auger bit" without scrolling the flat table. Extension augers (no diameter, shaft-only) stay in the flat table.
+
+---
+
 ## [0.10.0] — 2026-05-27
 
 ### Added
