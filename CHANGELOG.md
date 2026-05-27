@@ -15,6 +15,16 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.12.0] — 2026-05-27
+
+### Added
+- **Auger extensions in the auger panel.** Extension auger bits (`EXTENSION AUGER BIT ... NN" LENGTH` — shaft only, no flighting) used to fall through to the flat table. They now render as a trailing "Extensions" card inside the Auger Bits panel, grouped by length, so a coordinator pulling a 4-foot bit can grab the matching extension without leaving the section. Panel title renamed to "Auger Bits & Extensions — by Size · Length".
+
+### Changed
+- **Length displayed in feet.** Auger panel now shows length as `4'` / `2'` instead of `48"` / `24"` — matches how dispatchers and techs actually talk about auger lengths. Bit diameter (size) stays in inches per industry convention.
+
+---
+
 ## [0.11.1] — 2026-05-27
 
 ### Changed
