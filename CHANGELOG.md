@@ -15,6 +15,14 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.9.0] — 2026-05-27
+
+### Added
+- **Clickable version chip → recent changelog.** The `v0.9.0` badge in the header is now a button. Clicking it opens a centered modal that lazy-fetches `CHANGELOG.md`, parses out the `[Unreleased]` block plus the five most recent versions, and renders them with light markdown formatting (version headings, section subheaders, bullet lists, inline `code` and **bold**). Closes on the × button, backdrop click, or Escape. Falls back to a "View on GitHub →" link when the fetch fails (e.g. `file://` runs).
+- **Click-to-copy on Bulk Cheat Sheet part #s.** Cheat-sheet rows and the QC bucket cards now use the same `.part-badge` markup as the main search table — accent-bordered chip, copy-icon affordance on hover, success flash + "COPIED" tag, clipboard fallback for non-secure contexts. Copy click delegation moved from the search `<tbody>` to `document` so a single handler covers all three surfaces (main table, cheat sheet table, QC tree).
+
+---
+
 ## [0.8.0] — 2026-05-15
 
 ### Added
