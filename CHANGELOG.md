@@ -15,6 +15,13 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.13.1] — 2026-05-27
+
+### Added
+- **Machine-fitment sub-line on QC coupler cards.** Each QC card now shows a small dimmed line below the head with the mini-excavator class the coupler fits: `QC27` → "Fits 15–50 sized mini excavators", `QC30` → "Fits 80–90 sized mini excavators". Dashed underline separates it from the first size row. Sourced from a small `QC_FITMENT` lookup in the renderer (not the CSV) — domain knowledge that doesn't live in the parts data. Future coupler sizes just need an entry in the lookup to surface their own fitment line.
+
+---
+
 ## [0.13.0] — 2026-05-27
 
 ### Added

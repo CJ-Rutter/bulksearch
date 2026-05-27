@@ -838,7 +838,21 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     color: var(--accent);
+    margin-bottom: 4px;
+  }
+  /* Small informational line under the card head — used today for QC
+     coupler fitment ("Fits 15–50 sized mini excavators"). Visually
+     quieter than the head, dashed underline separates it from the
+     first size row below. */
+  .qc-card-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
     margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
   }
   .qc-size {
     display: grid;
@@ -1700,7 +1714,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.13.0</button></h1>
+        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.13.1</button></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1711,7 +1725,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.13.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.13.1"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1795,7 +1809,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.13.0</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.13.1</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>
@@ -2206,6 +2220,16 @@ function parseQCBucket(row) {
   };
 }
 
+// Machine-fitment hints for each QC coupler size. Sourced from CJ /
+// dispatch knowledge, not the CSV — coupler size maps to a class of
+// mini excavator and we render the range as a sub-line under the
+// card head so a coordinator can confirm machine compatibility
+// without crossing to a spec sheet.
+const QC_FITMENT = {
+  27: "Fits 15–50 sized mini excavators",
+  30: "Fits 80–90 sized mini excavators",
+};
+
 function renderQCFeatured(qcRows) {
   if (!qcRows.length) { $qc_featured.style.display = "none"; $qc_featured.innerHTML = ""; return; }
   // tree[qc][width][kind] = [row, ...]
@@ -2234,8 +2258,10 @@ function renderQCFeatured(qcRows) {
           <div class="qc-bucket-rows">${rowsHtml}</div>
         </div>`;
     }).join("");
+    const fitment = QC_FITMENT[qc];
     return `<div class="qc-card">
       <div class="qc-card-head">QC${qc} Buckets</div>
+      ${fitment ? `<div class="qc-card-sub">${escapeHtml(fitment)}</div>` : ""}
       ${sizeBlocks}
     </div>`;
   }).join("");
