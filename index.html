@@ -790,21 +790,28 @@
   .cs-desc { color: var(--text); word-break: break-word; }
   .cs-bin-changed td { border-top: 2px solid var(--border-bright); }
 
-  /* Featured QC bucket tree — renders above the compact table when the
-     loaded CSV contains QC27/QC30 quick-coupler excavator buckets. Grouped
-     by coupler size → bucket width → Clean/Dig so a coordinator scanning
-     for "24-inch QC30 dig bucket" can land on the part number in seconds. */
+  /* Featured panels above the flat table — one per recognized category
+     (QC buckets, pin-diameter buckets, auger bits, future additions).
+     Each panel renders inside a .qc-featured block with a prominent
+     centered header so the three (or more) groups read as distinct. */
   .qc-featured {
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px dashed var(--border-bright);
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--border-bright);
   }
   .qc-featured-title {
-    font: 600 11px/1 'JetBrains Mono', monospace;
-    letter-spacing: 0.08em;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 14px;
+    color: var(--accent);
+    text-align: center;
+    margin: 4px 0 18px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent);
+    background: var(--accent-glow);
   }
   .qc-grid {
     display: grid;
@@ -1686,7 +1693,7 @@
     <div class="brand">
       <div class="brand-mark">[B]</div>
       <div class="brand-text">
-        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.11.0</button></h1>
+        <h1>BulkSearch <button class="brand-version" id="brand-version" type="button" title="View recent changes">v0.11.1</button></h1>
         <p>Parts Inventory · Created by <span class="author">CJ Rutter</span></p>
       </div>
     </div>
@@ -1697,7 +1704,7 @@
       <a
         class="feedback-btn"
         id="feedback-btn"
-        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.11.0"
+        href="mailto:cj.rutter@equipmentshare.com?subject=BulkSearch%20Feedback%20%E2%80%94%20v0.11.1"
         title="Send feedback to CJ"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1781,7 +1788,7 @@
       </div>
     </div>
     <div id="print-summary" aria-hidden="true">
-      <div class="ps-title">BulkSearch <span class="ps-version">v0.11.0</span></div>
+      <div class="ps-title">BulkSearch <span class="ps-version">v0.11.1</span></div>
       <div class="ps-meta">
         <span id="ps-dataset">Built-in snapshot</span>
         <span class="ps-sep">·</span>

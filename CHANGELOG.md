@@ -15,6 +15,13 @@ All notable changes to BulkSearch are documented here. Format: [Keep a Changelog
 
 ---
 
+## [0.11.1] — 2026-05-27
+
+### Changed
+- **Cheat sheet panel headers.** Section titles ("QC Coupler Buckets", "Excavator Buckets — by Pin Diameter", "Auger Bits — by Size · Length") are now panel headers — 20px monospace, bold, uppercase, centered, accent-colored, with top/bottom accent rules and a tinted background — so the three (and future) featured groups read as distinct panels instead of quiet subheaders. Per-section separator firmed up from a 1px dashed rule to a 2px solid one. New categories added later inherit the same treatment automatically (single `.qc-featured-title` rule).
+
+---
+
 ## [0.11.0] — 2026-05-27
 
 ### Added
